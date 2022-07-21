@@ -1,62 +1,36 @@
-from eth_typing import ContractName
+import json
+import logging
+from pprint import pformat
 from web3 import Web3
-from solcx import compile_source
+import requests
 
-# Solidity source code
-compiled_sol = compile_source(
-         '''
-         pragma solidity >0.5.0;
+from web3.auto import w3
+from web3.contract import get_event_data
 
-         contract Greeter {
-             string public greeting;
+infura_url = "https://mainnet.infura.io/v3/c71703b7b9734ff68884062db8d377f0"
 
-             constructor() public {
-                 greeting = 'Hello';
-             }
+web3 = Web3(Web3.HTTPProvider(infura_url))
 
-             function setGreeting(string memory _greeting) public {
-                 greeting = _greeting;
-             }
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
-             function greet() view public returns (string memory) {
-                 return greeting;
-             }
-         }
-         ''',
-         output_values=['abi', 'bin']
-     )
 
-# retrieve the contract interface
-contract_id, contract_interface = compiled_sol.popitem()
+## Constants for the smart contract
+# This is just for example purposes.
+ERC721_ABI_TRANSFER_EVENT = json.loads(
+  requests.get(
+    url="https://gist.githubusercontent.com/bartcode/0e03bbec375c3de54a49e8bee88ddcf8/raw/65fc003ba0291310a11af99b485946f8ad562a9b/erc721-transfer-abi.json"
+  ).content
+)
+ERC721_KECCAK = web3.keccak(text="Transfer(address,address,uint256)")
 
-# get bytecode / bin
-bytecode = contract_interface['bin']
+## Looping through the blocks (let's take a single one for now)
+for block_number in [14188382]:
+  block_info = web3.eth.get_block(block_number)
 
-# get abi
-abi = contract_interface['abi']
+  for transaction in block_info.transactions:
+    receipt = web3.eth.get_transaction_receipt(transaction)
 
-# web3.py instance
-w3 = Web3(Web3.EthereumTesterProvider())
-
-# set pre-funded account as sender
-w3.eth.default_account = w3.eth.accounts[0]
-
-Greeter = w3.eth.contract(abi=abi, bytecode=bytecode)
-
-# Submit the transaction that deploys the contract
-tx_hash = Greeter.constructor().transact()
-
-# Wait for the transaction to be mined, and get the transaction receipt
-tx_receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
-
-greeter = w3.eth.contract(
-         address=tx_receipt.contractAddress,
-         abi=abi
-     )
-
-print(greeter.functions.greet().call())
-
-tx_hash = greeter.functions.setGreeting('jay').transact()
-tx_receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
-print(greeter.functions.greet().call())
-
+    for log in receipt.logs:
+      if log.topics and log.topics[0] == ERC721_KECCAK and log.data == "0x":
+        logger.info("Found transfer event:\n%s", pformat(dict(get_event_data(web3.codec, ERC721_ABI_TRANSFER_EVENT, log))))

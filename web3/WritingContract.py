@@ -15,6 +15,7 @@ tx_hash = Greeter.constructor().transact()
 print(tx_hash)
 
 tx_receipt = web3.eth.wait_for_transaction_receipt(tx_hash)
+print(tx_receipt)
 contract = web3.eth.contract(
     address=tx_receipt.contractAddress,
     abi =abi
