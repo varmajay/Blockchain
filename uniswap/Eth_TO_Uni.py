@@ -51,4 +51,3 @@ signed_txn = web3.eth.account.sign_transaction(uniswapv2_txn, private_key=os.get
 tx_token = web3.eth.send_raw_transaction(signed_txn.rawTransaction)
 print(web3.toHex(tx_token))
 
-#hello
