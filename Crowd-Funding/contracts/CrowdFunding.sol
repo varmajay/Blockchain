@@ -12,7 +12,6 @@ contract CrowdFunding
     uint public raisedAmount;
     uint public noOfContributors;
 
-
     struct Request
     {
         string description;
@@ -95,3 +94,4 @@ contract CrowdFunding
         thisRequest.completed = true;
     }
 }
+
