@@ -29,16 +29,16 @@ balance = web3.eth.get_balance(sender_address)
 eth_bal = web3.fromWei(balance, 'ether')
 print('My Test Eth Balance is: ', eth_bal)
 
-tokenToBuy = web3.toChecksumAddress("0x01547Ef97f9140dbDF5ae50f06B77337B95cF4BB") # USDT token Address
+tokenToBuy = web3.toChecksumAddress("0x3B00Ef435fA4FcFF5C209a37d1f3dcff37c705aD") # USDT token Address
 spend = web3.toChecksumAddress("0xc778417E063141139Fce010982780140Aa0cD5Ab")  # wbnb contract #weth token Address
 
 nonce = web3.eth.get_transaction_count(sender_address)
 
 uniswapv2_txn = contract.functions.swapExactETHForTokens(
-    10000000000,  # set to 0, or specify minimum amount of tokeny you want to receive - consider decimals!!!
+    0,  # set to 0, or specify minimum amount of tokeny you want to receive - consider decimals!!!
     [spend, tokenToBuy],
     sender_address,
-    (int(time.time()) + 100000)
+    (int(time.time()) + 600)
 ).buildTransaction({
     'from': sender_address,
     'value': web3.toWei(0.1, 'ether'),
